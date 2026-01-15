@@ -119,7 +119,7 @@ export default function Profile() {
                 </div>
 
                 <p style={{ marginTop: 'var(--spacing-xl)', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    Versión 1.2.1
+                    Versión 1.2.1 - Desarrollado por Jimmy80
                 </p>
             </div>
 

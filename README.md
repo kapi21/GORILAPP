@@ -1,6 +1,6 @@
 # GorilApp 🦍
 
-![GorilApp Logo](public/logo_web.png)
+![GorilApp Logo](gorilapp-logo.png)
 
 > **Tu Gymbro de Entrenamiento.**
 
