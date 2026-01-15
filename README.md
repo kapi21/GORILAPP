@@ -1,16 +1,29 @@
-# React + Vite
+# GorilApp 🦍
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![GorilApp Logo](public/logo_web.png)
 
-Currently, two official plugins are available:
+> **Tu Gymbro de Entrenamiento.**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Aplicación PWA diseñada para registrar tus entrenamientos de fuerza de forma rápida, intuitiva y con una estética agresiva que te motiva a darlo todo.
 
-## React Compiler
+## 🚀 Versión 1.2.0 - Gestión Total
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Novedades
+- **Gestión de Ejercicios (CRUD)**: Añade, edita y borra ejercicios de tus rutinas al instante.
+- **Timers Avanzados**: Nuevos temporizadores estilo marcador LED (Tabata, EMOM, AMRAP, Clock).
+- **Control Total**: Cancela cuentas atrás, modifica series y pesos con facilidad.
+- **Responsive**: Interfaz optimizada para móvil sin scroll innecesario.
 
-## Expanding the ESLint configuration
+### Características Principales
+- 📊 **Registro Local**: Tus datos se guardan en tu dispositivo (DexieDB).
+- 📱 **PWA**: Instálala como una app nativa.
+- ⚡ **Rápida**: Sin cargas lentas ni conexión obligatoria.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠️ Tecnologías
+- React 19 + Vite
+- Dexie.js (IndexedDB wrapper)
+- Recharts (Gráficas de progreso)
+- Lucide React (Iconos)
+
+---
+*GorilApp - Entrena como una bestia.*
