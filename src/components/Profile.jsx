@@ -95,31 +95,31 @@ export default function Profile() {
                     borderRadius: 'var(--radius-lg)',
                     textAlign: 'left'
                 }}>
-                    <h4 style={{ marginBottom: 'var(--spacing-md)' }}>Características</h4>
+                    <h4 style={{ marginBottom: 'var(--spacing-md)' }}>Características v1.2.1</h4>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ Seguimiento de entrenamientos
+                            ✅ <strong>Gestión Total (CRUD)</strong>: Crea y edita ejercicios
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ Registro de pesos y repeticiones
+                            ✅ <strong>Timers Pro</strong>: Tabata, EMOM, AMRAP, Clock
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ Temporizador de descanso
+                            ✅ <strong>Modo LED</strong>: Estética 7-segmentos
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ Historial de sesiones
+                            ✅ <strong>Registro Completo</strong>: Series, Reps, RIR, Notas
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ Gráficos de progreso
+                            ✅ <strong>100% Privado</strong>: Datos locales (DexieDB)
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0' }}>
-                            ✅ Notas por ejercicio
+                            ✅ <strong>PWA Offline</strong>: Entrena sin internet
                         </li>
                     </ul>
                 </div>
 
                 <p style={{ marginTop: 'var(--spacing-xl)', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    Versión 1.0.0
+                    Versión 1.2.1
                 </p>
             </div>
 

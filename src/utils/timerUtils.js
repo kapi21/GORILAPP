@@ -7,17 +7,14 @@
  * @param {number} totalSeconds - Total seconds to format
  * @param {boolean} includeHours - Whether to include hours (default: true)
  * @returns {string} Formatted time string
- */
-export function formatTime(totalSeconds, includeHours = true) {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
+export function formatTime(totalSeconds) {
+    const pad = (num) => String(num).padStart(2, '0');
+    
+    // Force MM:SS format (total minutes : seconds)
+    // This supports > 60 minutes (e.g. 90:00) and fits 4 digits + colon better
+    const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
 
-    const pad = (num) => String(num).padStart(2, '0');
-
-    if (includeHours || hours > 0) {
-        return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-    }
     return `${pad(minutes)}:${pad(seconds)}`;
 }
 

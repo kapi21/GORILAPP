@@ -146,9 +146,11 @@ export default function WorkoutDetail({ workout, onBack, onStartSession }) {
                                     style={{
                                         width: '32px',
                                         height: '32px',
-                                        background: 'var(--bg-input)',
-                                        color: 'var(--primary)',
-                                        border: '1px solid var(--border)'
+                                        background: 'rgba(255, 255, 255, 0.1)',
+                                        color: 'white',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
                                     }}
                                 >
                                     <Pencil size={16} />
@@ -159,9 +161,11 @@ export default function WorkoutDetail({ workout, onBack, onStartSession }) {
                                     style={{
                                         width: '32px',
                                         height: '32px',
-                                        background: 'rgba(244, 67, 54, 0.1)',
-                                        color: 'var(--danger)',
-                                        border: '1px solid rgba(244, 67, 54, 0.2)'
+                                        background: 'rgba(244, 67, 54, 0.2)',
+                                        color: '#ff4444',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
                                     }}
                                 >
                                     <Trash2 size={16} />

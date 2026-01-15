@@ -60,8 +60,8 @@ export default function ExerciseModal({ isOpen, onClose, onSave, initialData }) 
                     <h3 style={{ margin: 0, color: 'white' }}>
                         {initialData ? 'Editar Ejercicio' : 'Nuevo Ejercicio'}
                     </h3>
-                    <button onClick={onClose} className="btn-icon">
-                        <X size={24} color="white" />
+                    <button onClick={onClose} className="btn-icon" style={{ background: 'rgba(255, 255, 255, 0.1)', color: 'white' }}>
+                        <X size={24} />
                     </button>
                 </div>
 
@@ -73,7 +73,7 @@ export default function ExerciseModal({ isOpen, onClose, onSave, initialData }) 
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            className="input-field"
+                            className="input"
                             placeholder="Ej: Press de Banca"
                             required
                             autoFocus
@@ -88,7 +88,7 @@ export default function ExerciseModal({ isOpen, onClose, onSave, initialData }) 
                                 name="sets"
                                 value={formData.sets}
                                 onChange={handleChange}
-                                className="input-field"
+                                className="input"
                                 min="1"
                                 required
                             />
@@ -100,7 +100,7 @@ export default function ExerciseModal({ isOpen, onClose, onSave, initialData }) 
                                 name="reps"
                                 value={formData.reps}
                                 onChange={handleChange}
-                                className="input-field"
+                                className="input"
                                 placeholder="8-12"
                                 required
                             />
@@ -115,7 +115,7 @@ export default function ExerciseModal({ isOpen, onClose, onSave, initialData }) 
                                 name="rir"
                                 value={formData.rir}
                                 onChange={handleChange}
-                                className="input-field"
+                                className="input"
                                 placeholder="1-2"
                             />
                         </div>
@@ -126,7 +126,7 @@ export default function ExerciseModal({ isOpen, onClose, onSave, initialData }) 
                                 name="rest"
                                 value={formData.rest}
                                 onChange={handleChange}
-                                className="input-field"
+                                className="input"
                                 placeholder="90s"
                             />
                         </div>
@@ -138,7 +138,7 @@ export default function ExerciseModal({ isOpen, onClose, onSave, initialData }) 
                             name="notes"
                             value={formData.notes}
                             onChange={handleChange}
-                            className="input-field"
+                            className="input"
                             placeholder="Tips técnicos, setup, etc."
                             rows={3}
                             style={{ resize: 'vertical' }}
