@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { KeepAwake } from '@capacitor-community/keep-awake';
 import Layout from './components/Layout';
 import WorkoutList from './components/WorkoutList';
 import WorkoutDetail from './components/WorkoutDetail';
@@ -19,6 +20,11 @@ function App() {
   useEffect(() => {
     async function init() {
       await initializeDatabase();
+      try {
+        await KeepAwake.keepAwake();
+      } catch (err) {
+        console.warn('KeepAwake error:', err);
+      }
       setIsInitialized(true);
     }
     init();
