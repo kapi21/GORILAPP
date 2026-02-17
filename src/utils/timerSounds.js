@@ -3,6 +3,7 @@
  */
 
 let audioContext = null;
+const soundBuffers = {};
 
 /**
  * Initialize audio context (call this on user interaction)
@@ -110,14 +111,14 @@ export function playStartSound() {
  * @param {Function} onComplete - Callback when countdown completes
  */
 export function playCountdownBeeps(onComplete) {
-    playBeep(800, 200, 1.0);
+    playCountdownBeep(1.0);
 
     setTimeout(() => {
-        playBeep(800, 200, 1.0);
+        playCountdownBeep(1.0);
     }, 1000);
 
     setTimeout(() => {
-        playBeep(800, 200, 1.0);
+        playCountdownBeep(1.0);
     }, 2000);
 
     setTimeout(() => {
@@ -130,12 +131,12 @@ export function playCountdownBeeps(onComplete) {
  * Play warning sound (for last 10 seconds)
  */
 export function playWarningBeep() {
-    playBeep(1200, 150, 1.0);
+    playCountdownBeep(1.0);
 }
 
 /**
  * Play phase change sound (for TABATA work/rest transitions)
  */
 export function playPhaseChangeSound() {
-    playBeep(900, 300, 1.0);
+    playStartBeep(1.0);
 }
