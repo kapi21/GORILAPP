@@ -20,7 +20,8 @@ export default function History() {
         const enriched = await Promise.all(
             sessionList.map(async session => {
                 const workout = await getWorkoutById(session.workoutId);
-                return { ...session, workoutName: workout.name };
+                // BUG-03: guard para evitar crash si el workout fue eliminado
+                return { ...session, workoutName: workout?.name ?? 'Rutina eliminada' };
             })
         );
 

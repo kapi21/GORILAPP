@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Play, SkipForward } from 'lucide-react';
 
+// BUG-05: singleton de AudioContext para evitar memory leak
+// (crear uno nuevo en cada beep agota el límite del navegador)
+let sharedAudioContext = null;
+function getAudioContext() {
+    if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+        sharedAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return sharedAudioContext;
+}
+
 export default function PrepTimer({ setNumber, totalSets, onComplete, onSkip }) {
     const [timeLeft, setTimeLeft] = useState(10); // 10 seconds prep time
     const [isActive, setIsActive] = useState(true);
@@ -23,26 +33,28 @@ export default function PrepTimer({ setNumber, totalSets, onComplete, onSkip }) 
     }, [timeLeft, isActive, onComplete]);
 
     function playBeep() {
-        // Create audio context for beep sound
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        try {
+            const audioContext = getAudioContext();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
 
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
 
-        oscillator.frequency.value = 800; // Frequency in Hz
-        oscillator.type = 'sine';
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
 
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
 
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.5);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
 
-        // Vibrate if available
-        if ('vibrate' in navigator) {
-            navigator.vibrate([200, 100, 200]);
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        } catch (e) {
+            console.warn('Audio no disponible:', e);
         }
     }
 

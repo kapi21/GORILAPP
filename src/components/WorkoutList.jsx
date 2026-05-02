@@ -19,14 +19,16 @@ export default function WorkoutList({ onSelectWorkout }) {
         const workoutList = await getWorkouts();
         setWorkouts(workoutList);
 
-        // Load last session for each workout
+        // PERF-01: cargar todas las últimas sesiones en paralelo (evita N+1 queries)
+        const sessionResults = await Promise.all(
+            workoutList.map(w => getSessionsByWorkout(w.id, 1))
+        );
         const sessions = {};
-        for (const workout of workoutList) {
-            const workoutSessions = await getSessionsByWorkout(workout.id, 1);
+        sessionResults.forEach((workoutSessions, i) => {
             if (workoutSessions.length > 0) {
-                sessions[workout.id] = workoutSessions[0];
+                sessions[workoutList[i].id] = workoutSessions[0];
             }
-        }
+        });
         setLastSessions(sessions);
     }
 
@@ -51,10 +53,13 @@ export default function WorkoutList({ onSelectWorkout }) {
         setPausedSession(null);
     }
 
+    // BUG-09: 5 colores para las 5 rutinas
     const workoutColors = [
         'linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%)',
         'linear-gradient(135deg, #F44336 0%, #D32F2F 100%)',
-        'linear-gradient(135deg, #C62828 0%, #8B0000 100%)'
+        'linear-gradient(135deg, #C62828 0%, #8B0000 100%)',
+        'linear-gradient(135deg, #B71C1C 0%, #7f0000 100%)',
+        'linear-gradient(135deg, #E53935 0%, #C62828 100%)'
     ];
 
     return (

@@ -13,13 +13,18 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- Edge-to-edge: barra de estado y navegación transparentes -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- Forzar fondo oscuro para que no haya flash blanco -->
+        <item name="android:windowBackground">@android:color/black</item>
+        <!-- Permitir que el contenido se extienda debajo de las barras del sistema -->
+        <item name="android:fitsSystemWindows">false</item>
     </style>
-
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
     </style>
+
 </resources>

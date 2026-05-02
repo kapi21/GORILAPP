@@ -95,7 +95,7 @@ export default function Profile() {
                     borderRadius: 'var(--radius-lg)',
                     textAlign: 'left'
                 }}>
-                    <h4 style={{ marginBottom: 'var(--spacing-md)' }}>Características v1.2.1</h4>
+                    <h4 style={{ marginBottom: 'var(--spacing-md)' }}>Novedades v2.0</h4>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
                             ✅ <strong>Gestión Total (CRUD)</strong>: Crea y edita ejercicios
@@ -112,14 +112,23 @@ export default function Profile() {
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
                             ✅ <strong>100% Privado</strong>: Datos locales (DexieDB)
                         </li>
-                        <li style={{ padding: 'var(--spacing-sm) 0' }}>
+                        <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
                             ✅ <strong>PWA Offline</strong>: Entrena sin internet
+                        </li>
+                        <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
+                            🆕 <strong>Rutina 5 Días</strong>: Nueva programación completa
+                        </li>
+                        <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
+                            🆕 <strong>Pantalla Siempre Activa</strong>: Sin bloqueos durante el entreno
+                        </li>
+                        <li style={{ padding: 'var(--spacing-sm) 0' }}>
+                            🆕 <strong>Bugs Críticos Corregidos</strong>: Timers, imágenes y progreso
                         </li>
                     </ul>
                 </div>
 
                 <p style={{ marginTop: 'var(--spacing-xl)', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    Versión 1.2.1 - Desarrollado por Jimmy80
+                    Versión 2.0 - Desarrollado por Jimmy80
                 </p>
             </div>
 

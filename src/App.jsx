@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { KeepAwake } from '@capacitor-community/keep-awake';
+import { requestWakeLock } from './utils/wakeLock';
 import Layout from './components/Layout';
 import WorkoutList from './components/WorkoutList';
 import WorkoutDetail from './components/WorkoutDetail';
@@ -28,6 +29,25 @@ function App() {
       setIsInitialized(true);
     }
     init();
+
+    const enableWakeLock = async () => {
+      try {
+        await KeepAwake.keepAwake();
+      } catch (e) {
+        // Fallback
+      }
+      await requestWakeLock();
+      document.removeEventListener('click', enableWakeLock);
+      document.removeEventListener('touchstart', enableWakeLock);
+    };
+
+    document.addEventListener('click', enableWakeLock);
+    document.addEventListener('touchstart', enableWakeLock);
+
+    return () => {
+      document.removeEventListener('click', enableWakeLock);
+      document.removeEventListener('touchstart', enableWakeLock);
+    };
   }, []);
 
   // Global exit confirmation

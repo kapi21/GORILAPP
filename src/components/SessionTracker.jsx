@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, Check, ChevronLeft, ChevronRight, StickyNote, Timer, Pause } from 'lucide-react';
 import {
     getExercisesByWorkout,
@@ -58,6 +58,7 @@ export default function SessionTracker({ workout, onClose }) {
     useEffect(() => {
         if (exercises.length > 0) {
             loadLastWeight(exercises[currentExerciseIndex]);
+            setImageError(false); // BUG-02: resetear error de imagen al cambiar ejercicio
         }
     }, [currentExerciseIndex, exercises]);
 
@@ -107,12 +108,13 @@ export default function SessionTracker({ workout, onClose }) {
     }
 
     function parseRestTime(restString) {
-        // Parse rest time like "90 s", "2 min", "3-4 min"
-        if (restString.includes('90')) return 90;
-        if (restString.includes('2')) return 120;
-        if (restString.includes('3')) return 180;
-        if (restString.includes('4')) return 240;
-        return 90;
+        // BUG-07: parse robusto con regex para "90 s", "2 min", "3-4 min", "2-3 min"
+        const match = restString.match(/(\d+)(?:-(\d+))?\s*(s|min)/);
+        if (!match) return 90;
+        const low = parseInt(match[1]);
+        const high = match[2] ? parseInt(match[2]) : low;
+        const avg = Math.round((low + high) / 2);
+        return match[3] === 'min' ? avg * 60 : avg;
     }
 
     // NEW WORKFLOW: Start all 5 sets for current exercise
@@ -128,33 +130,48 @@ export default function SessionTracker({ workout, onClose }) {
     }
 
     // Called when PrepTimer completes - user does the set, then RestTimer starts automatically
-    function handlePrepTimerComplete() {
+    // BUG-01: useCallback para evitar stale closure que resetea el timer
+    const handlePrepTimerComplete = useCallback(() => {
         setShowPrepTimer(false);
 
-        const exercise = exercises[currentExerciseIndex];
-        const totalSets = parseInt(exercise.sets.match(/\d+/)[0]);
+        setCurrentSetNumber(prev => {
+            // Acceder al estado más reciente dentro del callback
+            return prev; // Solo leemos, la lógica real está abajo
+        });
 
-        // After a short delay (user does the set), start rest timer automatically
-        // For now, start rest timer immediately - user will do set during rest
-        if (currentSetNumber < totalSets) {
-            // Start rest timer for next set
-            const restSeconds = parseRestTime(exercise.rest);
-            setTimerDuration(restSeconds);
-            setShowTimer(true);
-        } else {
-            // All sets done, move to RPE phase
-            setExercisePhase('rpe');
-        }
-    }
+        // Usamos la ref funcional para acceder al estado actual
+        setExercises(currentExercises => {
+            setCurrentExerciseIndex(currentIndex => {
+                const exercise = currentExercises[currentIndex];
+                if (!exercise) return currentIndex;
+                const totalSets = parseInt(exercise.sets.match(/\d+/)[0]);
+
+                setCurrentSetNumber(currentSet => {
+                    if (currentSet < totalSets) {
+                        const restSeconds = parseRestTime(exercise.rest);
+                        setTimerDuration(restSeconds);
+                        setShowTimer(true);
+                    } else {
+                        setExercisePhase('rpe');
+                    }
+                    return currentSet;
+                });
+                return currentIndex;
+            });
+            return currentExercises;
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Called when RestTimer completes - move to next set
-    function handleRestTimerComplete() {
+    // BUG-01: useCallback para evitar stale closure que resetea el timer
+    const handleRestTimerComplete = useCallback(() => {
         setShowTimer(false);
         setCurrentSetNumber(prev => prev + 1);
 
         // Start PrepTimer for next set
         setShowPrepTimer(true);
-    }
+    }, []);
 
     // Submit RPE for all sets of current exercise
     async function submitExerciseRPE() {
@@ -190,15 +207,17 @@ export default function SessionTracker({ workout, onClose }) {
         }
 
         // Move to next exercise or complete workout
-        if (currentExerciseIndex < exercises.length - 1) {
-            setCurrentExerciseIndex(prev => prev + 1);
+        // BUG-08: usar nextIndex calculado para evitar stale closure
+        const nextIndex = currentExerciseIndex + 1;
+        if (nextIndex < exercises.length) {
+            setCurrentExerciseIndex(nextIndex);
             setCurrentSetNumber(1);
             setExercisePhase('input');
             setWeight('');
             setRpe(null);
 
-            // Load last weight for next exercise
-            loadLastWeight(exercises[currentExerciseIndex + 1]);
+            // Load last weight for next exercise usando el índice correcto
+            loadLastWeight(exercises[nextIndex]);
         } else {
             // Workout complete!
             await completeSession();

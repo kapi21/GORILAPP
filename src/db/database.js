@@ -175,6 +175,7 @@ export async function getProgressData(exerciseId, days = 90) {
     const date = new Date(set.date).toLocaleDateString();
     if (!progressByDate[date] || set.weight > progressByDate[date].weight) {
       progressByDate[date] = {
+        dateISO: set.date, // BUG-10: guardar fecha ISO para ordenar correctamente
         date,
         weight: set.weight,
         reps: set.reps
@@ -183,6 +184,6 @@ export async function getProgressData(exerciseId, days = 90) {
   });
 
   return Object.values(progressByDate).sort((a, b) =>
-    new Date(a.date) - new Date(b.date)
+    new Date(a.dateISO) - new Date(b.dateISO) // BUG-10: usar fecha ISO, no localeDateString
   );
 }
