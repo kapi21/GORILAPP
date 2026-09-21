@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, ChevronRight } from 'lucide-react';
-import { getSessions, getWorkoutById, getSetsBySession, getExerciseById } from '../db/database';
+import { Calendar, Clock, ChevronRight, Pencil } from 'lucide-react';
+import { getSessions, getWorkoutById, getSetsBySession, getExerciseById, updateSet, deleteSet } from '../db/database';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import EditSetModal from './EditSetModal';
 
 export default function History() {
     const [sessions, setSessions] = useState([]);
     const [selectedSession, setSelectedSession] = useState(null);
     const [sessionDetails, setSessionDetails] = useState(null);
+    const [editingSet, setEditingSet] = useState(null);
 
     useEffect(() => {
         loadSessions();
@@ -16,11 +18,9 @@ export default function History() {
     async function loadSessions() {
         const sessionList = await getSessions();
 
-        // Enrich with workout names
         const enriched = await Promise.all(
             sessionList.map(async session => {
                 const workout = await getWorkoutById(session.workoutId);
-                // BUG-03: guard para evitar crash si el workout fue eliminado
                 return { ...session, workoutName: workout?.name ?? 'Rutina eliminada' };
             })
         );
@@ -31,13 +31,12 @@ export default function History() {
     async function loadSessionDetails(session) {
         const sets = await getSetsBySession(session.id);
 
-        // Group sets by exercise
         const exerciseMap = {};
         for (const set of sets) {
             if (!exerciseMap[set.exerciseId]) {
                 const exercise = await getExerciseById(set.exerciseId);
                 exerciseMap[set.exerciseId] = {
-                    exercise,
+                    exercise: exercise || { id: set.exerciseId, name: 'Ejercicio' },
                     sets: []
                 };
             }
@@ -46,6 +45,30 @@ export default function History() {
 
         setSessionDetails(Object.values(exerciseMap));
         setSelectedSession(session);
+    }
+
+    async function handleSaveEditedSet(updatedSet) {
+        if (updatedSet.id) {
+            await updateSet(updatedSet.id, {
+                weight: updatedSet.weight,
+                reps: updatedSet.reps,
+                rir: updatedSet.rir
+            });
+        }
+        setEditingSet(null);
+        if (selectedSession) {
+            await loadSessionDetails(selectedSession);
+        }
+    }
+
+    async function handleDeleteSet(setId) {
+        if (setId) {
+            await deleteSet(setId);
+        }
+        setEditingSet(null);
+        if (selectedSession) {
+            await loadSessionDetails(selectedSession);
+        }
     }
 
     if (selectedSession && sessionDetails) {
@@ -92,21 +115,64 @@ export default function History() {
                                         style={{
                                             display: 'flex',
                                             justifyContent: 'space-between',
-                                            padding: 'var(--spacing-sm)',
+                                            alignItems: 'center',
+                                            padding: 'var(--spacing-sm) var(--spacing-md)',
                                             background: 'var(--bg-input)',
                                             borderRadius: 'var(--radius-md)'
                                         }}
                                     >
-                                        <span>Serie {set.setNumber}</span>
-                                        <span style={{ fontWeight: 600 }}>
-                                            {set.weight} kg × {set.reps} reps
-                                        </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <span style={{ fontWeight: 700, color: 'var(--primary-light)', fontSize: '0.85rem' }}>
+                                                Serie {set.setNumber}
+                                            </span>
+                                            <span style={{ fontWeight: 600 }}>
+                                                {set.weight} kg × {set.reps} reps
+                                            </span>
+                                            {set.rir && (
+                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                                                    (RIR: {set.rir})
+                                                </span>
+                                            )}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditingSet({ ...set, exerciseName: exercise.name })}
+                                            style={{
+                                                background: 'rgba(255, 255, 255, 0.08)',
+                                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                                                color: '#FFFFFF',
+                                                borderRadius: '4px',
+                                                padding: '4px 8px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 600,
+                                                cursor: 'pointer'
+                                            }}
+                                            title="Editar serie"
+                                        >
+                                            <Pencil size={12} />
+                                            <span>Editar</span>
+                                        </button>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     ))}
                 </div>
+
+                {/* Edit Set Modal */}
+                {editingSet && (
+                    <EditSetModal
+                        isOpen={true}
+                        set={editingSet}
+                        exerciseName={editingSet.exerciseName}
+                        onSave={handleSaveEditedSet}
+                        onDelete={handleDeleteSet}
+                        onClose={() => setEditingSet(null)}
+                    />
+                )}
             </div>
         );
     }
@@ -138,7 +204,7 @@ export default function History() {
                                     <div style={{ display: 'flex', gap: 'var(--spacing-md)', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                                         <span>
                                             <Calendar size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                                            {format(new Date(session.date), "d MMM yyyy", { locale: es })}
+                                            {format(new Date(session.date), "d 'de' MMMM", { locale: es })}
                                         </span>
                                         {session.duration > 0 && (
                                             <span>
@@ -148,7 +214,7 @@ export default function History() {
                                         )}
                                     </div>
                                 </div>
-                                <ChevronRight size={24} color="var(--text-muted)" />
+                                <ChevronRight size={20} style={{ color: 'var(--text-secondary)' }} />
                             </div>
                         </div>
                     ))}

@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Download, Upload, Trash2, Database } from 'lucide-react';
+import { Download, Upload, Trash2, Database, RefreshCw } from 'lucide-react';
 import { exportData, importData, clearAllData, getDatabaseStats } from '../db/backup';
+import { syncRutinaSeptiembre, importCompletedSessionSeed } from '../db/database';
+import InstallPwaPrompt from './InstallPwaPrompt';
 
 export default function Profile() {
     const [stats, setStats] = useState(null);
     const [message, setMessage] = useState('');
+    const [syncing, setSyncing] = useState(false);
 
     useEffect(() => {
         loadStats();
@@ -13,6 +16,32 @@ export default function Profile() {
     async function loadStats() {
         const dbStats = await getDatabaseStats();
         setStats(dbStats);
+    }
+
+    async function handleSyncSeptiembre() {
+        setSyncing(true);
+        try {
+            const res = await syncRutinaSeptiembre();
+            setMessage(res.message);
+            await loadStats();
+        } catch (err) {
+            setMessage('Error al sincronizar: ' + err.message);
+        } finally {
+            setSyncing(false);
+            setTimeout(() => setMessage(''), 4000);
+        }
+    }
+
+    async function handleLoadSeedSession() {
+        try {
+            const res = await importCompletedSessionSeed();
+            setMessage(res.message);
+            await loadStats();
+        } catch (err) {
+            setMessage('Error al cargar la sesión: ' + err.message);
+        } finally {
+            setTimeout(() => setMessage(''), 4000);
+        }
     }
 
     async function handleExport() {
@@ -132,6 +161,9 @@ export default function Profile() {
                 </p>
             </div>
 
+            {/* PWA Install Action Card */}
+            <InstallPwaPrompt />
+
             {/* Database Statistics */}
             {stats && (
                 <div className="card" style={{ marginTop: 'var(--spacing-lg)' }}>
@@ -160,6 +192,23 @@ export default function Profile() {
                 </div>
             )}
 
+            {/* Rutinas & Bloques */}
+            <div className="card" style={{ marginTop: 'var(--spacing-lg)' }}>
+                <h4 style={{ marginBottom: 'var(--spacing-sm)' }}>Programación de Rutinas</h4>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: 'var(--spacing-md)' }}>
+                    Carga o restablece la <strong>Rutina Septiembre</strong> (4 sesiones, 30 ejercicios con RIR por serie y soporte multimedia).
+                </p>
+                <button
+                    onClick={handleSyncSeptiembre}
+                    disabled={syncing}
+                    className="btn btn-primary"
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                    <RefreshCw size={18} className={syncing ? 'spinner' : ''} />
+                    {syncing ? 'Sincronizando...' : 'Recargar / Sincronizar Rutina Septiembre'}
+                </button>
+            </div>
+
             {/* Backup & Restore */}
             <div className="card" style={{ marginTop: 'var(--spacing-lg)' }}>
                 <h4 style={{ marginBottom: 'var(--spacing-md)' }}>Backup y Restauración</h4>
@@ -168,6 +217,16 @@ export default function Profile() {
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+                    {/* Cargar Sesion Seed Button */}
+                    <button
+                        onClick={handleLoadSeedSession}
+                        className="btn btn-accent"
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                    >
+                        <RefreshCw size={18} />
+                        Cargar Sesión 1 (8 Ejercicios Completados)
+                    </button>
+
                     {/* Export Button */}
                     <button
                         onClick={handleExport}

@@ -1,59 +1,94 @@
-// Wake Lock API utility to keep screen awake during workouts
+import NoSleep from 'nosleep.js';
 
+// Utilidad infalible para mantener la pantalla siempre encendida durante el entrenamiento
+// Integra NoSleep.js (emulación multimedia para iOS y Android en HTTP/PWA) + WakeLock API nativa
+
+let noSleepInstance = null;
 let wakeLock = null;
+let isRequested = false;
+
+function getNoSleep() {
+    if (!noSleepInstance) {
+        noSleepInstance = new NoSleep();
+    }
+    return noSleepInstance;
+}
 
 /**
- * Request wake lock to keep screen on
- * @returns {Promise<boolean>} Success status
+ * Solicita mantener la pantalla encendida
+ * Debe llamarse preferiblemente tras un toque o click de usuario (iniciar entreno, añadir serie, etc.)
+ * @returns {Promise<boolean>}
  */
 export async function requestWakeLock() {
+    isRequested = true;
+    let success = false;
+
+    // 1. Activar NoSleep.js (compatible con iOS Safari, Android Chrome, HTTP y PWA)
     try {
-        if ('wakeLock' in navigator) {
-            wakeLock = await navigator.wakeLock.request('screen');
-
-            wakeLock.addEventListener('release', () => {
-                console.log('Wake Lock released');
-            });
-
-            console.log('Wake Lock activated');
-            return true;
-        } else {
-            console.warn('Wake Lock API not supported');
-            return false;
-        }
+        const ns = getNoSleep();
+        await ns.enable();
+        success = true;
+        console.log('[GorilApp] NoSleep activado (pantalla fija)');
     } catch (err) {
-        console.error(`Wake Lock error: ${err.name}, ${err.message}`);
-        return false;
+        console.warn('[GorilApp] Error activando NoSleep:', err);
     }
+
+    // 2. Activar Wake Lock API nativo si el navegador y el contexto lo permiten
+    if ('wakeLock' in navigator) {
+        try {
+            if (!wakeLock || wakeLock.released) {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLock.addEventListener('release', () => {
+                    console.log('[GorilApp] Wake Lock nativo liberado por el sistema');
+                });
+                success = true;
+                console.log('[GorilApp] Wake Lock nativo activado');
+            }
+        } catch (err) {
+            console.warn('[GorilApp] Wake Lock nativo no disponible en este contexto:', err.message);
+        }
+    }
+
+    return success;
 }
 
 /**
- * Release wake lock to allow screen to turn off
- * @returns {Promise<void>}
+ * Libera el bloqueo de pantalla al terminar la sesión
  */
-export async function releaseWakeLock() {
+export function releaseWakeLock() {
+    isRequested = false;
+
     if (wakeLock !== null) {
         try {
-            await wakeLock.release();
-            wakeLock = null;
-            console.log('Wake Lock released manually');
+            wakeLock.release();
         } catch (err) {
-            console.error(`Wake Lock release error: ${err.message}`);
+            console.warn('[GorilApp] Error al liberar Wake Lock nativo:', err.message);
+        } finally {
+            wakeLock = null;
+        }
+    }
+
+    if (noSleepInstance) {
+        try {
+            noSleepInstance.disable();
+            console.log('[GorilApp] NoSleep desactivado');
+        } catch (err) {
+            console.warn('[GorilApp] Error desactivando NoSleep:', err);
         }
     }
 }
 
 /**
- * Check if wake lock is currently active
+ * Indica si la pantalla activa está solicitada
  * @returns {boolean}
  */
 export function isWakeLockActive() {
-    return wakeLock !== null && !wakeLock.released;
+    return isRequested;
 }
 
-// Re-request wake lock when page becomes visible again
+// Reactivación al volver a la pestaña si la sesión sigue activa
 document.addEventListener('visibilitychange', async () => {
-    if (wakeLock !== null && document.visibilityState === 'visible') {
+    if (isRequested && document.visibilityState === 'visible') {
         await requestWakeLock();
     }
 });

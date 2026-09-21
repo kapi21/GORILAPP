@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ChevronRight, Calendar, Play, Pause, X } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { ChevronRight, Calendar, Play, Pause, X, Dumbbell, Layers } from 'lucide-react';
 import { getWorkouts, getSessionsByWorkout } from '../db/database';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -7,42 +7,40 @@ import { getSavedSession, clearSession } from '../utils/sessionStorage';
 
 export default function WorkoutList({ onSelectWorkout }) {
     const [workouts, setWorkouts] = useState([]);
-    const [lastSessions, setLastSessions] = useState({});
+    const [sessionStats, setSessionStats] = useState({}); // workoutId -> { count, lastSession }
     const [pausedSession, setPausedSession] = useState(null);
+
+    const loadPausedSession = useCallback(() => {
+        const saved = getSavedSession();
+        setPausedSession(saved);
+    }, []);
+
+    const loadWorkouts = useCallback(async () => {
+        const workoutList = await getWorkouts();
+        setWorkouts(workoutList);
+
+        const stats = {};
+        await Promise.all(
+            workoutList.map(async (w) => {
+                const sessions = await getSessionsByWorkout(w.id, 50);
+                stats[w.id] = {
+                    count: sessions.length,
+                    lastSession: sessions.length > 0 ? sessions[0] : null
+                };
+            })
+        );
+        setSessionStats(stats);
+    }, []);
 
     useEffect(() => {
         loadWorkouts();
         loadPausedSession();
-    }, []);
-
-    async function loadWorkouts() {
-        const workoutList = await getWorkouts();
-        setWorkouts(workoutList);
-
-        // PERF-01: cargar todas las últimas sesiones en paralelo (evita N+1 queries)
-        const sessionResults = await Promise.all(
-            workoutList.map(w => getSessionsByWorkout(w.id, 1))
-        );
-        const sessions = {};
-        sessionResults.forEach((workoutSessions, i) => {
-            if (workoutSessions.length > 0) {
-                sessions[workoutList[i].id] = workoutSessions[0];
-            }
-        });
-        setLastSessions(sessions);
-    }
-
-    function loadPausedSession() {
-        const saved = getSavedSession();
-        setPausedSession(saved);
-    }
+    }, [loadWorkouts, loadPausedSession]);
 
     function handleContinueSession() {
         if (pausedSession) {
-            // Find the full workout object
             const workout = workouts.find(w => w.id === pausedSession.workoutId);
             if (workout) {
-                // Pass full workout object with saved session data
                 onSelectWorkout(workout, pausedSession);
             }
         }
@@ -53,18 +51,37 @@ export default function WorkoutList({ onSelectWorkout }) {
         setPausedSession(null);
     }
 
-    // BUG-09: 5 colores para las 5 rutinas
     const workoutColors = [
-        'linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%)',
-        'linear-gradient(135deg, #F44336 0%, #D32F2F 100%)',
-        'linear-gradient(135deg, #C62828 0%, #8B0000 100%)',
-        'linear-gradient(135deg, #B71C1C 0%, #7f0000 100%)',
-        'linear-gradient(135deg, #E53935 0%, #C62828 100%)'
+        'linear-gradient(135deg, #D32F2F 0%, #8B0000 100%)',
+        'linear-gradient(135deg, #C62828 0%, #4A0E0E 100%)',
+        'linear-gradient(135deg, #B71C1C 0%, #3B0000 100%)',
+        'linear-gradient(135deg, #E53935 0%, #7F0000 100%)'
     ];
 
     return (
         <div className="container" style={{ paddingTop: 'var(--spacing-xl)' }}>
-            <h2 style={{ marginBottom: 'var(--spacing-lg)' }}>Tus Rutinas</h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-lg)' }}>
+                <div>
+                    <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--primary-light)', fontWeight: 800, letterSpacing: '0.5px' }}>
+                        MESOCICLO ACTIVO
+                    </span>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Rutina Septiembre</h2>
+                </div>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '0.85rem',
+                    background: 'var(--bg-card)',
+                    padding: '6px 12px',
+                    borderRadius: 'var(--radius-full)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-secondary)'
+                }}>
+                    <Layers size={16} />
+                    <span>{workouts.length} sesiones</span>
+                </div>
+            </div>
 
             {/* Paused Session Indicator */}
             {pausedSession && (
@@ -124,9 +141,11 @@ export default function WorkoutList({ onSelectWorkout }) {
                 </div>
             )}
 
+            {/* Exactly 4 Workout Cards */}
             <div className="grid grid-2">
                 {workouts.map((workout, index) => {
-                    const lastSession = lastSessions[workout.id];
+                    const stats = sessionStats[workout.id] || { count: 0, lastSession: null };
+                    const hasHistory = stats.count > 0;
 
                     return (
                         <div
@@ -135,42 +154,62 @@ export default function WorkoutList({ onSelectWorkout }) {
                             onClick={() => onSelectWorkout(workout)}
                             style={{
                                 background: workoutColors[index % workoutColors.length],
-                                border: 'none',
+                                border: '1px solid rgba(255, 255, 255, 0.12)',
                                 color: 'white',
-                                animationDelay: `${index * 100}ms`
+                                animationDelay: `${index * 60}ms`,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                                minHeight: '165px',
+                                boxShadow: 'var(--shadow-md)'
                             }}
                         >
-                            <div style={{ marginBottom: 'var(--spacing-md)' }}>
-                                <h3 style={{ fontSize: '1.25rem', marginBottom: 'var(--spacing-xs)' }}>
+                            <div>
+                                <div style={{
+                                    display: 'inline-block',
+                                    padding: '2px 8px',
+                                    borderRadius: '12px',
+                                    background: 'rgba(0, 0, 0, 0.4)',
+                                    fontSize: '0.7rem',
+                                    fontWeight: 800,
+                                    letterSpacing: '0.5px',
+                                    marginBottom: 'var(--spacing-sm)'
+                                }}>
+                                    SESIÓN {workout.order || index + 1}
+                                </div>
+                                <h3 style={{ fontSize: '1.2rem', marginBottom: 'var(--spacing-xs)', lineHeight: 1.3 }}>
                                     {workout.name}
                                 </h3>
-                                <p style={{ opacity: 0.9, fontSize: '0.875rem', marginBottom: 0 }}>
+                                <p style={{ opacity: 0.9, fontSize: '0.85rem', marginBottom: 0 }}>
                                     {workout.day}
                                 </p>
                             </div>
 
-                            {lastSession && (
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginTop: 'var(--spacing-md)',
+                                borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+                                paddingTop: 'var(--spacing-sm)'
+                            }}>
                                 <div style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: 'var(--spacing-xs)',
                                     fontSize: '0.75rem',
-                                    opacity: 0.8,
-                                    marginTop: 'var(--spacing-md)'
+                                    opacity: hasHistory ? 0.95 : 0.75
                                 }}>
-                                    <Calendar size={14} />
+                                    <Calendar size={13} />
                                     <span>
-                                        Última: {format(new Date(lastSession.date), "d 'de' MMMM", { locale: es })}
+                                        {hasHistory
+                                            ? `${stats.count} ${stats.count === 1 ? 'día' : 'días'} · Últ: ${format(new Date(stats.lastSession.date), "d MMM", { locale: es })}`
+                                            : 'Sin registros · Toca para iniciar'
+                                        }
                                     </span>
                                 </div>
-                            )}
 
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'flex-end',
-                                marginTop: 'var(--spacing-md)'
-                            }}>
-                                <ChevronRight size={24} />
+                                <ChevronRight size={22} />
                             </div>
                         </div>
                     );
@@ -183,7 +222,8 @@ export default function WorkoutList({ onSelectWorkout }) {
                     padding: 'var(--spacing-2xl)',
                     color: 'var(--text-muted)'
                 }}>
-                    <p>Cargando rutinas...</p>
+                    <Dumbbell size={40} style={{ opacity: 0.4, marginBottom: 'var(--spacing-sm)' }} />
+                    <p>Cargando sesiones...</p>
                 </div>
             )}
         </div>

@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "exportDate": "2026-09-21T18:14:00.000Z",
+  "workouts": [
+    { "id": 1, "name": "Sesión 1 – Espalda / Torso / Pierna", "day": "Posterior / Dorsal / Cuádriceps / Glúteo / Abdomen", "order": 1, "block": "Rutina Septiembre" },
+    { "id": 2, "name": "Sesión 2 – Empuje / Deltoides / Pectoral", "day": "Hombro / Pecho / Tríceps", "order": 2, "block": "Rutina Septiembre" },
+    { "id": 3, "name": "Sesión 3 – Pierna / Tracción / Bíceps", "day": "Cuádriceps / Femoral / Dorsal / Bíceps / Gemelos", "order": 3, "block": "Rutina Septiembre" },
+    { "id": 4, "name": "Sesión 4 – Torso / Hombro / Pectoral / Tríceps", "day": "Pectoral / Deltoides / Tríceps / Abdomen", "order": 4, "block": "Rutina Septiembre" }
+  ],
+  "exercises": [],
+  "sessions": [
+    {
+      "id": 1,
+      "workoutId": 1,
+      "date": "2026-09-21T15:10:37.184Z",
+      "duration": 3,
+      "notes": "",
+      "motivation": "",
+      "block": "Rutina Septiembre"
+    }
+  ],
+  "sets": [
+    { "id": 1, "sessionId": 1, "exerciseId": 101, "setNumber": 1, "weight": 52, "reps": 10, "rir": "0", "date": "2026-09-21T15:10:54.599Z" },
+    { "id": 2, "sessionId": 1, "exerciseId": 101, "setNumber": 2, "weight": 52, "reps": 10, "rir": "0", "date": "2026-09-21T15:10:57.702Z" },
+    { "id": 3, "sessionId": 1, "exerciseId": 101, "setNumber": 3, "weight": 52, "reps": 10, "rir": "F", "date": "2026-09-21T15:11:01.559Z" },
+    { "id": 4, "sessionId": 1, "exerciseId": 102, "setNumber": 1, "weight": 50, "reps": 8, "rir": "0", "date": "2026-09-21T15:11:18.958Z" },
+    { "id": 5, "sessionId": 1, "exerciseId": 102, "setNumber": 2, "weight": 45, "reps": 10, "rir": "0", "date": "2026-09-21T15:11:29.812Z" },
+    { "id": 6, "sessionId": 1, "exerciseId": 103, "setNumber": 1, "weight": 54, "reps": 10, "rir": "0", "date": "2026-09-21T15:11:42.858Z" },
+    { "id": 7, "sessionId": 1, "exerciseId": 103, "setNumber": 2, "weight": 54, "reps": 10, "rir": "1", "date": "2026-09-21T15:11:47.518Z" },
+    { "id": 8, "sessionId": 1, "exerciseId": 103, "setNumber": 3, "weight": 54, "reps": 10, "rir": "0", "date": "2026-09-21T15:11:53.367Z" },
+    { "id": 9, "sessionId": 1, "exerciseId": 104, "setNumber": 1, "weight": 41, "reps": 10, "rir": "0", "date": "2026-09-21T15:12:22.087Z" },
+    { "id": 10, "sessionId": 1, "exerciseId": 104, "setNumber": 2, "weight": 41, "reps": 10, "rir": "1", "date": "2026-09-21T15:12:32.779Z" },
+    { "id": 11, "sessionId": 1, "exerciseId": 105, "setNumber": 1, "weight": 65, "reps": 8, "rir": "0", "date": "2026-09-21T15:13:07.193Z" },
+    { "id": 12, "sessionId": 1, "exerciseId": 105, "setNumber": 2, "weight": 50, "reps": 10, "rir": "0", "date": "2026-09-21T15:13:16.790Z" },
+    { "id": 13, "sessionId": 1, "exerciseId": 106, "setNumber": 1, "weight": 140, "reps": 8, "rir": "F", "date": "2026-09-21T15:13:36.634Z" },
+    { "id": 14, "sessionId": 1, "exerciseId": 106, "setNumber": 2, "weight": 140, "reps": 8, "rir": "F", "date": "2026-09-21T15:13:42.290Z" },
+    { "id": 15, "sessionId": 1, "exerciseId": 107, "setNumber": 1, "weight": 73, "reps": 10, "rir": "1", "date": "2026-09-21T15:13:57.363Z" },
+    { "id": 16, "sessionId": 1, "exerciseId": 107, "setNumber": 2, "weight": 73, "reps": 10, "rir": "0", "date": "2026-09-21T15:14:01.530Z" },
+    { "id": 17, "sessionId": 1, "exerciseId": 108, "setNumber": 1, "weight": 91, "reps": 10, "rir": "0", "date": "2026-09-21T15:14:10.954Z" },
+    { "id": 18, "sessionId": 1, "exerciseId": 108, "setNumber": 2, "weight": 91, "reps": 10, "rir": "F", "date": "2026-09-21T15:14:14.929Z" }
+  ],
+  "notes": []
+}

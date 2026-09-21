@@ -13,7 +13,7 @@ function getAudioContext() {
 
 export default function PrepTimer({ setNumber, totalSets, onComplete, onSkip }) {
     const [timeLeft, setTimeLeft] = useState(10); // 10 seconds prep time
-    const [isActive, setIsActive] = useState(true);
+    const [isActive] = useState(true);
 
     useEffect(() => {
         if (!isActive || timeLeft === 0) {

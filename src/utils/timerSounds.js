@@ -83,9 +83,8 @@ export function playFinalBeep(volume = 1.0) {
     playSound('long', volume);
 }
 
-export function playCountdownBeep(frequency = 800, duration = 100, volume = 1.0) {
+export function playCountdownBeep(volume = 1.0) {
     // Countdown beep (bip2.mp3)
-    // Ignored frequency/duration to use the real sound
     playSound('countdown', volume);
 }
 

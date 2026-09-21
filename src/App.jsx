@@ -20,20 +20,28 @@ function App() {
 
   useEffect(() => {
     async function init() {
-      await initializeDatabase();
+      try {
+        await Promise.race([
+          initializeDatabase(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout DB')), 3000))
+        ]);
+      } catch (err) {
+        console.warn('Init DB warning:', err);
+      }
       try {
         await KeepAwake.keepAwake();
       } catch (err) {
         console.warn('KeepAwake error:', err);
+      } finally {
+        setIsInitialized(true);
       }
-      setIsInitialized(true);
     }
     init();
 
     const enableWakeLock = async () => {
       try {
         await KeepAwake.keepAwake();
-      } catch (e) {
+      } catch {
         // Fallback
       }
       await requestWakeLock();
