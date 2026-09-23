@@ -121,30 +121,6 @@ export default function Layout({ children, currentView, onNavigate }) {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Indicador de Estado Activo */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                            borderRadius: '20px',
-                            padding: '4px 10px',
-                            fontSize: '0.7rem',
-                            fontWeight: 700,
-                            color: '#a5d6a7'
-                        }}>
-                            <span style={{
-                                width: '7px',
-                                height: '7px',
-                                borderRadius: '50%',
-                                background: '#4CAF50',
-                                boxShadow: '0 0 8px #4CAF50',
-                                display: 'inline-block'
-                            }} />
-                            <span style={{ letterSpacing: '0.5px' }}>ONLINE</span>
-                        </div>
                     </div>
                 </div>
             </header>

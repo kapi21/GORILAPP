@@ -9,7 +9,9 @@ import History from './components/History';
 import ProgressCharts from './components/ProgressCharts';
 import Profile from './components/Profile';
 import TimerModule from './components/TimerModule';
-import { initializeDatabase } from './db/database';
+import IntroSplash from './components/IntroSplash';
+import { initializeDatabase, getWorkoutById } from './db/database';
+import { getSavedSession, clearSession } from './utils/sessionStorage';
 import './index.css';
 
 function App() {
@@ -17,6 +19,7 @@ function App() {
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [activeSession, setActiveSession] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
 
   useEffect(() => {
     async function init() {
@@ -28,6 +31,21 @@ function App() {
       } catch (err) {
         console.warn('Init DB warning:', err);
       }
+
+      // Comprobar si hay una sesión activa previa para reanudar en segundo plano
+      try {
+        const saved = getSavedSession();
+        if (saved && saved.workoutId) {
+          const w = (await getWorkoutById(saved.workoutId)) || saved.workout;
+          if (w) {
+            setActiveSession({ ...w, savedSession: saved });
+            setShowIntro(false); // Omitir intro si el usuario vuelve a su entrenamiento
+          }
+        }
+      } catch (err) {
+        console.warn('Error recuperando sesión activa:', err);
+      }
+
       try {
         await KeepAwake.keepAwake();
       } catch (err) {
@@ -92,6 +110,7 @@ function App() {
   }
 
   function handleEndSession() {
+    clearSession();
     setActiveSession(null);
     setSelectedWorkout(null);
     setCurrentView('workouts');
@@ -121,6 +140,11 @@ function App() {
   // Active session view (full screen)
   if (activeSession) {
     return <SessionTracker workout={activeSession} onClose={handleEndSession} />;
+  }
+
+  // Intro Splash en arranque en frío
+  if (showIntro) {
+    return <IntroSplash onFinish={() => setShowIntro(false)} />;
   }
 
   // Main app with navigation

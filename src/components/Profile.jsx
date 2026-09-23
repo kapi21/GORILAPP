@@ -124,40 +124,34 @@ export default function Profile() {
                     borderRadius: 'var(--radius-lg)',
                     textAlign: 'left'
                 }}>
-                    <h4 style={{ marginBottom: 'var(--spacing-md)' }}>Novedades v2.0</h4>
+                    <h4 style={{ marginBottom: 'var(--spacing-md)' }}>Novedades v2.1</h4>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ <strong>Gestión Total (CRUD)</strong>: Crea y edita ejercicios
+                            🆕 <strong>Navegación Libre de Ejercicios</strong>: Selector superior táctil para saltar entre máquinas a tu propio ritmo
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ <strong>Timers Pro</strong>: Tabata, EMOM, AMRAP, Clock
+                            🆕 <strong>Fin de Sesión Protegido</strong>: Modal con advertencia detallada de ejercicios pendientes
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ <strong>Modo LED</strong>: Estética 7-segmentos
+                            🆕 <strong>Segundo Plano Continuo</strong>: Auto-guardado en tiempo real y descanso con reloj absoluto en móvil
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ <strong>Registro Completo</strong>: Series, Reps, RIR, Notas
+                            🆕 <strong>Intro Cinemática</strong>: Apertura fluida con vídeo inicial y opción de salto instantáneo
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ <strong>100% Privado</strong>: Datos locales (DexieDB)
+                            🆕 <strong>Diseño Móvil Sin Desbordes</strong>: Botón finalizar en ancho completo y cabecera despejada
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            ✅ <strong>PWA Offline</strong>: Entrena sin internet
-                        </li>
-                        <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            🆕 <strong>Rutina 5 Días</strong>: Nueva programación completa
-                        </li>
-                        <li style={{ padding: 'var(--spacing-sm) 0', borderBottom: '1px solid var(--border)' }}>
-                            🆕 <strong>Pantalla Siempre Activa</strong>: Sin bloqueos durante el entreno
+                            ✅ <strong>100% Privado & Offline</strong>: IndexedDB (Dexie) local y PWA instalable
                         </li>
                         <li style={{ padding: 'var(--spacing-sm) 0' }}>
-                            🆕 <strong>Bugs Críticos Corregidos</strong>: Timers, imágenes y progreso
+                            ✅ <strong>Timers Pro</strong>: Tabata, EMOM, AMRAP, For Time y Clock
                         </li>
                     </ul>
                 </div>
 
                 <p style={{ marginTop: 'var(--spacing-xl)', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    Versión 2.0 - Desarrollado por Jimmy80
+                    Versión 2.1.0 - Desarrollado por Jimmy80
                 </p>
             </div>
 

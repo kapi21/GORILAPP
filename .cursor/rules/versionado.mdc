@@ -1,0 +1,20 @@
+---
+description: Versionado semántico GorilApp — VERSION en package.json, Profile, README y HANDOFF en cada release/commit.
+alwaysApply: true
+---
+
+# Regla de Versionado de GorilApp
+
+Fuente única: `package.json` (`version`).
+
+## Cuándo subir versión
+- **Cada commit / subida a GitHub** que cambie producto o añada funcionalidades: incrementar `version` (patch / minor: `2.0.0` → `2.1.0` ... → `2.1.1`).
+- Antes de modificar código: leer `version` en `package.json` y `HANDOFF.md`.
+
+## Checklist al bumpear versión
+1. `package.json` y `package-lock.json` — campo `version`
+2. `src/components/Profile.jsx` — Novedades y etiqueta de versión en UI
+3. `README.md` — Historial de cambios
+4. `HANDOFF.md` — Documento de traspaso y estado al cerrar la sesión
+5. Recompilación (`npm run build`) y Despliegue en LXC (`python scripts/deploy_lxc.py`)
+6. Git add, commit y push a `origin main`

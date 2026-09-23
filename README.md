@@ -8,11 +8,17 @@ Aplicación PWA diseñada para registrar tus entrenamientos de fuerza de forma r
 
 ## 📜 Historial de Cambios
 
-### v1.2.1 - ui Improvements 🎨
-- **Timers MM:SS**: Formato de tiempo optimizado (4 dígitos) para mejor visualización horizontal.
-- **Interfaz Refinada**: Mejoras visuales en modales, inputs y botones de acción.
-- **Perfil Actualizado**: Créditos y lista completa de características.
-- **Hotfix**: Solución a problemas de arranque.
+### v2.1.0 - Navegación Libre, Segundo Plano & Intro Cinemática 🦍
+- **Navegación No Secuencial**: Selector de ejercicios táctil en cabecera con indicadores (`0/3`, `1/3`, `✓ 3/3`) para saltar de máquina sin bloqueos.
+- **Fin de Sesión Protegido**: Botón dedicado y modal que advierte sobre ejercicios incompletos antes de permitir cerrar.
+- **Segundo Plano Continuo**: Auto-guardado en tiempo real en IndexedDB/localStorage y descanso por timestamp absoluto (sin pausas al consultar otras apps en móvil).
+- **Intro Cinemática (`intro.mp4`)**: Vídeo de inicio con reproducción fluida y salto directo; omisión inteligente al reanudar entrenos.
+- **Optimización Móvil**: Ajuste de botones inferiores en doble fila (`1fr 1fr` + `100%`) eliminando desbordamiento lateral, y cabecera limpia sin pastilla `ONLINE`.
+
+### v2.0.0 - Versión Base Completa 🚀
+- **Rutina Septiembre**: 4 sesiones fijas de fuerza con 30 ejercicios, RIR por serie y soporte multimedia.
+- **Prevención de Pantalla Fija**: Híbrido NoSleep.js + WakeLock API nativo.
+- **PWA Offline**: Service Worker con pre-caché y ejecución 100% en dispositivo.
 
 ### v1.2.0 - Gestión Total & Timers Pro 🏋️‍♂️
 - **CRUD de Ejercicios**: Añade, edita y elimina ejercicios de tus rutinas al instante.

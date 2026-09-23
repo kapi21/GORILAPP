@@ -2,24 +2,42 @@ import { useState, useEffect, useRef } from 'react';
 import { X, Volume2 } from 'lucide-react';
 
 export default function RestTimer({ duration, onComplete, onSkip }) {
+    const targetEndTimeRef = useRef(Date.now() + duration * 1000);
     const [timeLeft, setTimeLeft] = useState(duration);
     const audioRef = useRef(null);
+    const hasCompletedRef = useRef(false);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(interval);
-                    playSound();
-                    vibrate();
-                    setTimeout(onComplete, 1000);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+        targetEndTimeRef.current = Date.now() + duration * 1000;
+        hasCompletedRef.current = false;
 
-        return () => clearInterval(interval);
+        const updateTimer = () => {
+            if (hasCompletedRef.current) return;
+            const remaining = Math.max(0, Math.ceil((targetEndTimeRef.current - Date.now()) / 1000));
+            setTimeLeft(remaining);
+
+            if (remaining <= 0 && !hasCompletedRef.current) {
+                hasCompletedRef.current = true;
+                playSound();
+                vibrate();
+                setTimeout(onComplete, 800);
+            }
+        };
+
+        const interval = setInterval(updateTimer, 500);
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                updateTimer();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, [duration, onComplete]);
 
     function playSound() {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Check, ChevronLeft, ChevronRight, StickyNote, Pause, Plus, Minus, Pencil } from 'lucide-react';
+import { X, Check, ChevronLeft, ChevronRight, StickyNote, Pause, Plus, Minus, Pencil, AlertTriangle, Flag } from 'lucide-react';
 import {
     getExercisesByWorkout,
     createSession,
@@ -102,7 +102,8 @@ export default function SessionTracker({ workout, onClose }) {
     const [showTimer, setShowTimer] = useState(false);
     const [timerDuration, setTimerDuration] = useState(90);
     const [showNotes, setShowNotes] = useState(false);
-    const [startTime] = useState(() => Date.now());
+    const [showFinishModal, setShowFinishModal] = useState(false);
+    const [startTime, setStartTime] = useState(() => workout.savedSession?.startTime || Date.now());
     const [editingSet, setEditingSet] = useState(null);
 
     const initSession = useCallback(async () => {
@@ -118,12 +119,35 @@ export default function SessionTracker({ workout, onClose }) {
             setReps(saved.reps || '');
             setSelectedRir(saved.selectedRir || '');
             setSessionSets(saved.sessionSets || {});
-            clearSession();
+            if (saved.startTime) {
+                setStartTime(saved.startTime);
+            }
         } else {
             const id = await createSession(workout.id, '', '', workout.block || 'Rutina Septiembre');
             setSessionId(id);
         }
     }, [workout]);
+
+    // Auto-guardado continuo en segundo plano
+    useEffect(() => {
+        if (!sessionId || !workout) return;
+        const sessionData = {
+            workoutId: workout.id,
+            workoutName: workout.name,
+            block: workout.block,
+            workout,
+            sessionId,
+            startTime,
+            currentExerciseIndex,
+            currentSetNumber,
+            weight,
+            reps,
+            selectedRir,
+            sessionSets,
+            status: 'active'
+        };
+        saveSession(sessionData);
+    }, [sessionId, workout, startTime, currentExerciseIndex, currentSetNumber, weight, reps, selectedRir, sessionSets]);
 
     const loadExerciseData = useCallback(async (exercise, setNum) => {
         const pastSets = await getSetsByExercise(exercise.id, 8);
@@ -237,8 +261,37 @@ export default function SessionTracker({ workout, onClose }) {
             setReps(parseDefaultReps(currentExercise, nextSetNum).toString());
             setSelectedRir(parseSetTargetRir(currentExercise, nextSetNum));
         } else {
-            // Exercise complete! Move to next exercise or finish session
-            handleNextExercise();
+            // Ejercicio completado: activar descanso y buscar siguiente pendiente sin cerrar la sesión
+            const restSeconds = parseRestTime(currentExercise.rest);
+            setTimerDuration(restSeconds);
+            setShowTimer(true);
+
+            // Marcar que este ejercicio ya terminó sus series
+            setCurrentSetNumber(totalSets + 1);
+
+            // Buscar si quedan otros ejercicios pendientes de completar
+            const currentDoneKey = setKey;
+            const updatedCompletedMap = { ...sessionSets, [currentDoneKey]: true };
+            const pendingIndices = [];
+            exercises.forEach((ex, idx) => {
+                const exTotal = parseTotalSets(ex);
+                let completedCount = 0;
+                for (let s = 1; s <= exTotal; s++) {
+                    if (updatedCompletedMap[`${ex.id}-${s}`]) completedCount++;
+                }
+                if (completedCount < exTotal) {
+                    pendingIndices.push(idx);
+                }
+            });
+
+            if (pendingIndices.length > 0) {
+                // Ir al siguiente ejercicio que tenga series pendientes
+                const nextPending = pendingIndices.find(idx => idx > currentExerciseIndex) ?? pendingIndices[0];
+                goToExercise(nextPending);
+            } else {
+                // Todos los ejercicios de la sesión se han completado: mostrar modal de confirmación
+                setShowFinishModal(true);
+            }
         }
     }
 
@@ -274,28 +327,63 @@ export default function SessionTracker({ workout, onClose }) {
         setEditingSet(null);
     }
 
+    // Navegación directa y flexible a cualquier ejercicio
+    function goToExercise(idx) {
+        if (idx < 0 || idx >= exercises.length) return;
+        const targetEx = exercises[idx];
+        const targetTotalSets = parseTotalSets(targetEx);
+
+        // Calcular la siguiente serie no realizada para ese ejercicio
+        let nextSet = 1;
+        for (let s = 1; s <= targetTotalSets; s++) {
+            if (sessionSets[`${targetEx.id}-${s}`]) {
+                nextSet = s + 1;
+            } else {
+                nextSet = s;
+                break;
+            }
+        }
+
+        setCurrentExerciseIndex(idx);
+        setCurrentSetNumber(nextSet);
+        setWeight('');
+        setReps('');
+        setSelectedRir('');
+    }
+
     function handleNextExercise() {
         const nextIndex = currentExerciseIndex + 1;
         if (nextIndex < exercises.length) {
-            setCurrentExerciseIndex(nextIndex);
-            setCurrentSetNumber(1);
-            setWeight('');
-            setReps('');
-            setSelectedRir('');
+            goToExercise(nextIndex);
         } else {
-            completeSession();
+            // Si llega al final de la lista, consultar al usuario si desea finalizar
+            setShowFinishModal(true);
         }
     }
 
     function handlePrevExercise() {
         if (currentExerciseIndex > 0) {
-            setCurrentExerciseIndex(currentExerciseIndex - 1);
-            setCurrentSetNumber(1);
-            setWeight('');
-            setReps('');
-            setSelectedRir('');
+            goToExercise(currentExerciseIndex - 1);
         }
     }
+
+    // Obtener lista de ejercicios que aún tienen series sin hacer
+    const getPendingExercises = () => {
+        return exercises.map((ex, idx) => {
+            const exTotal = parseTotalSets(ex);
+            let exDone = 0;
+            for (let s = 1; s <= exTotal; s++) {
+                if (sessionSets[`${ex.id}-${s}`]) exDone++;
+            }
+            return {
+                index: idx,
+                name: ex.name,
+                completed: exDone,
+                total: exTotal,
+                isPending: exDone < exTotal
+            };
+        }).filter(e => e.isPending);
+    };
 
     const handleRestTimerComplete = useCallback(() => {
         setShowTimer(false);
@@ -357,23 +445,27 @@ export default function SessionTracker({ workout, onClose }) {
     }
 
     return (
-        <div className="animate-fadeIn" style={{ minHeight: '100vh', background: 'var(--bg-dark)', paddingBottom: '90px' }}>
+        <div className="animate-fadeIn" style={{ minHeight: '100vh', background: 'var(--bg-dark)', paddingBottom: '90px', width: '100%', maxWidth: '100vw', overflowX: 'hidden', boxSizing: 'border-box' }}>
             {/* Sticky Header */}
             <div style={{
                 background: 'var(--gradient-primary)',
-                padding: 'var(--spacing-md) var(--spacing-lg)',
+                padding: '12px var(--spacing-md)',
                 position: 'sticky',
                 top: 0,
                 zIndex: 100,
-                boxShadow: 'var(--shadow-md)'
+                boxShadow: 'var(--shadow-md)',
+                boxSizing: 'border-box',
+                width: '100%'
             }}>
                 <div className="container" style={{ padding: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', opacity: 0.8, letterSpacing: '0.5px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                            <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', opacity: 0.85, letterSpacing: '0.5px', display: 'block' }}>
                                 {workout.block || 'Rutina Septiembre'}
                             </span>
-                            <h3 style={{ color: 'white', margin: 0, fontSize: '1.15rem' }}>{workout.name}</h3>
+                            <h3 style={{ color: 'white', margin: 0, fontSize: '1.05rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {workout.name}
+                            </h3>
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
                             <button
@@ -391,6 +483,14 @@ export default function SessionTracker({ workout, onClose }) {
                                 title="Pausar sesión"
                             >
                                 <Pause size={20} />
+                            </button>
+                            <button
+                                onClick={() => setShowFinishModal(true)}
+                                className="btn-icon"
+                                style={{ background: 'rgba(76, 175, 80, 0.35)', color: '#FFFFFF', border: '1px solid rgba(76, 175, 80, 0.6)' }}
+                                title="Finalizar sesión"
+                            >
+                                <Flag size={18} />
                             </button>
                             <button
                                 onClick={() => {
@@ -458,6 +558,78 @@ export default function SessionTracker({ workout, onClose }) {
                             <span>·</span>
                             <span>{progressPercent}%</span>
                         </button>
+                    </div>
+
+                    {/* Quick Exercise Selector Bar */}
+                    <div style={{
+                        display: 'flex',
+                        gap: '6px',
+                        overflowX: 'auto',
+                        padding: '10px 0 2px 0',
+                        scrollbarWidth: 'none',
+                        WebkitOverflowScrolling: 'touch'
+                    }}>
+                        {exercises.map((ex, idx) => {
+                            const exTotal = parseTotalSets(ex);
+                            let exDone = 0;
+                            for (let s = 1; s <= exTotal; s++) {
+                                if (sessionSets[`${ex.id}-${s}`]) {
+                                    exDone++;
+                                }
+                            }
+                            const isCurrent = idx === currentExerciseIndex;
+                            const isCompleted = exDone >= exTotal;
+                            const isPartial = exDone > 0 && !isCompleted;
+
+                            return (
+                                <button
+                                    key={ex.id || idx}
+                                    type="button"
+                                    onClick={() => goToExercise(idx)}
+                                    style={{
+                                        flexShrink: 0,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '5px',
+                                        padding: '5px 10px',
+                                        borderRadius: '16px',
+                                        border: isCurrent ? '2px solid #FFFFFF' : '1px solid rgba(255,255,255,0.2)',
+                                        background: isCurrent 
+                                            ? 'rgba(0, 0, 0, 0.45)' 
+                                            : isCompleted 
+                                                ? 'rgba(76, 175, 80, 0.25)' 
+                                                : isPartial 
+                                                    ? 'rgba(255, 152, 0, 0.25)' 
+                                                    : 'rgba(0, 0, 0, 0.2)',
+                                        color: '#FFFFFF',
+                                        fontWeight: isCurrent ? 800 : 600,
+                                        fontSize: '0.72rem',
+                                        cursor: 'pointer',
+                                        boxShadow: isCurrent ? '0 0 8px rgba(0, 0, 0, 0.5)' : 'none'
+                                    }}
+                                >
+                                    {isCompleted ? (
+                                        <Check size={12} color="#a5d6a7" strokeWidth={3} />
+                                    ) : (
+                                        <span style={{ 
+                                            width: '7px', 
+                                            height: '7px', 
+                                            borderRadius: '50%', 
+                                            background: isPartial ? '#ffb74d' : 'rgba(255,255,255,0.4)' 
+                                        }} />
+                                    )}
+                                    <span>{idx + 1}. {ex.name.length > 13 ? ex.name.slice(0, 13) + '…' : ex.name}</span>
+                                    <span style={{ 
+                                        opacity: 0.9, 
+                                        fontSize: '0.68rem', 
+                                        fontWeight: 700,
+                                        color: isCompleted ? '#a5d6a7' : isPartial ? '#ffb74d' : 'rgba(255,255,255,0.8)' 
+                                    }}>
+                                        ({exDone}/{exTotal})
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
@@ -803,23 +975,69 @@ export default function SessionTracker({ workout, onClose }) {
                 )}
 
                 {/* Jump between exercises navigation */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                <div style={{ marginTop: 'var(--spacing-md)', width: '100%', boxSizing: 'border-box' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', width: '100%', marginBottom: '8px' }}>
+                        <button
+                            type="button"
+                            onClick={handlePrevExercise}
+                            disabled={currentExerciseIndex === 0}
+                            className="btn btn-secondary"
+                            style={{
+                                width: '100%',
+                                opacity: currentExerciseIndex === 0 ? 0.4 : 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                padding: '12px 6px',
+                                fontSize: '0.88rem',
+                                boxSizing: 'border-box'
+                            }}
+                        >
+                            <ChevronLeft size={18} />
+                            Anterior
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleNextExercise}
+                            className="btn btn-secondary"
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                padding: '12px 6px',
+                                fontSize: '0.88rem',
+                                boxSizing: 'border-box'
+                            }}
+                        >
+                            Siguiente
+                            <ChevronRight size={18} />
+                        </button>
+                    </div>
+
                     <button
-                        onClick={handlePrevExercise}
-                        disabled={currentExerciseIndex === 0}
-                        className="btn btn-secondary"
-                        style={{ flex: 1, opacity: currentExerciseIndex === 0 ? 0.4 : 1 }}
+                        type="button"
+                        onClick={() => setShowFinishModal(true)}
+                        className="btn btn-accent"
+                        style={{
+                            width: '100%',
+                            background: 'var(--gradient-primary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            fontWeight: 800,
+                            padding: '14px 16px',
+                            fontSize: '0.95rem',
+                            boxShadow: '0 4px 16px rgba(211, 47, 47, 0.4)',
+                            boxSizing: 'border-box',
+                            letterSpacing: '0.5px'
+                        }}
                     >
-                        <ChevronLeft size={18} />
-                        Anterior
-                    </button>
-                    <button
-                        onClick={handleNextExercise}
-                        className="btn btn-secondary"
-                        style={{ flex: 1 }}
-                    >
-                        {currentExerciseIndex === exercises.length - 1 ? 'Finalizar' : 'Siguiente'}
-                        <ChevronRight size={18} />
+                        <Flag size={18} />
+                        Finalizar Sesión
                     </button>
                 </div>
             </div>
@@ -852,6 +1070,148 @@ export default function SessionTracker({ workout, onClose }) {
                     onClose={() => setEditingSet(null)}
                 />
             )}
+
+            {/* Modal de Finalizar Sesión con aviso de ejercicios pendientes */}
+            {showFinishModal && (() => {
+                const pending = getPendingExercises();
+                const isAllComplete = pending.length === 0;
+
+                return (
+                    <div className="modal-overlay" onClick={() => setShowFinishModal(false)}>
+                        <div
+                            className="modal-content"
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                                maxWidth: '440px',
+                                width: '92%',
+                                textAlign: 'center',
+                                background: '#1c1c1e',
+                                border: isAllComplete ? '2px solid var(--success)' : '2px solid #ff9800',
+                                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.8)'
+                            }}
+                        >
+                            <div style={{
+                                width: '60px',
+                                height: '60px',
+                                borderRadius: '50%',
+                                background: isAllComplete ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 152, 0, 0.15)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                margin: '0 auto 16px',
+                                border: isAllComplete ? '2px solid var(--success)' : '2px solid #ff9800'
+                            }}>
+                                {isAllComplete ? (
+                                    <Check size={32} color="var(--success)" strokeWidth={3} />
+                                ) : (
+                                    <AlertTriangle size={32} color="#ff9800" />
+                                )}
+                            </div>
+
+                            <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem' }}>
+                                {isAllComplete ? '¡Rutina Completada! 🦍💪' : '¿Finalizar sesión ahora?'}
+                            </h3>
+
+                            {isAllComplete ? (
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px' }}>
+                                    Has completado todas las series de todos los ejercicios. ¡Gran trabajo!
+                                </p>
+                            ) : (
+                                <div style={{ textAlign: 'left', marginBottom: '20px' }}>
+                                    <p style={{ color: '#ffb74d', fontSize: '0.85rem', margin: '0 0 10px 0', fontWeight: 600 }}>
+                                        ⚠️ Aún te queda{pending.length > 1 ? 'n' : ''} {pending.length} ejercicio{pending.length > 1 ? 's' : ''} pendiente{pending.length > 1 ? 's' : ''}:
+                                    </p>
+                                    <div style={{
+                                        background: 'rgba(0, 0, 0, 0.4)',
+                                        borderRadius: 'var(--radius-md)',
+                                        padding: '8px 12px',
+                                        maxHeight: '160px',
+                                        overflowY: 'auto',
+                                        border: '1px solid var(--border)'
+                                    }}>
+                                        {pending.map(p => (
+                                            <div
+                                                key={p.index}
+                                                onClick={() => {
+                                                    setShowFinishModal(false);
+                                                    goToExercise(p.index);
+                                                }}
+                                                style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    padding: '8px 4px',
+                                                    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.85rem'
+                                                }}
+                                                title="Toca para ir a este ejercicio"
+                                            >
+                                                <span style={{ fontWeight: 600, color: '#FFFFFF' }}>
+                                                    {p.index + 1}. {p.name}
+                                                </span>
+                                                <span style={{
+                                                    background: p.completed > 0 ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                                                    color: p.completed > 0 ? '#ffb74d' : 'var(--text-muted)',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '10px',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 700
+                                                }}>
+                                                    {p.completed}/{p.total} series
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', margin: '8px 0 0 0', textAlign: 'center' }}>
+                                        (Toca cualquier ejercicio para ir a realizarlo)
+                                    </p>
+                                </div>
+                            )}
+
+                            <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
+                                {!isAllComplete && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowFinishModal(false)}
+                                        className="btn btn-primary btn-lg"
+                                        style={{ width: '100%', fontWeight: 800 }}
+                                    >
+                                        Continuar entrenando
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowFinishModal(false);
+                                        completeSession();
+                                    }}
+                                    className={`btn ${isAllComplete ? 'btn-primary btn-lg' : 'btn-secondary'}`}
+                                    style={{
+                                        width: '100%',
+                                        fontWeight: 700,
+                                        background: isAllComplete ? 'var(--gradient-primary)' : 'rgba(211, 47, 47, 0.2)',
+                                        borderColor: isAllComplete ? 'transparent' : 'rgba(211, 47, 47, 0.5)',
+                                        color: isAllComplete ? '#FFFFFF' : '#ff8a80'
+                                    }}
+                                >
+                                    {isAllComplete ? 'Guardar y Finalizar Sesión 🦍' : 'Finalizar sesión de todos modos'}
+                                </button>
+                                {isAllComplete && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowFinishModal(false)}
+                                        className="btn btn-secondary"
+                                        style={{ width: '100%' }}
+                                    >
+                                        Revisar sesión
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
         </div>
     );
 }

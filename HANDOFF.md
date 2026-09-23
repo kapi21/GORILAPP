@@ -1,7 +1,8 @@
-# 🦍 GorilApp v2.0 - Documento de Traspaso (Handoff)
+# 🦍 GorilApp v2.1 - Documento de Traspaso (Handoff)
 
-**Fecha**: Septiembre 2026  
+**Fecha**: 23 Septiembre 2026  
 **Autor**: Jimmy80 & Antigravity  
+**Versión**: `2.1.0`  
 **Estado**: Producción Activa / PWA Funcional  
 **Acceso Remoto**: `https://jamesnas.tail7ea469.ts.net`
 
@@ -93,3 +94,15 @@ npm start
   4. Sesión 4: Full Body Dinámico / Brazos - 7 ejercicios.
 - **Respaldo de Sesión Semilla**: Incluido en `public/backup_sesion_8_ejercicios.json`, restaurable desde la pestaña *Perfil*.
 - **Editor de Series**: Modal compacto (`src/components/EditSetModal.jsx`) sin scroll para corregir peso, repeticiones o RIR sobre la marcha.
+
+---
+
+## 6. Novedades y Mejoras Implementadas (v2.1.0)
+- **Navegación Libre No Secuencial**: Selector horizontal de ejercicios integrado en la cabecera fija de `src/components/SessionTracker.jsx`. Permite saltar entre ejercicios y máquinas ocupadas manteniendo el cómputo individual de series completadas (`✓ X/Y`) sin bloqueos.
+- **Fin de Sesión Seguro**: Eliminada la finalización forzada al terminar el último ejercicio. Incorporado botón explícito "Finalizar Sesión" y modal de confirmación inteligente que detecta y enumera los ejercicios con series incompletas antes de permitir salir.
+- **Persistencia Continua en Segundo Plano**: Auto-guardado en tiempo real en IndexedDB y `localStorage`. Sincronización precisa en `src/components/RestTimer.jsx` mediante timestamp absoluto (`targetEndTime`), impidiendo la detención del temporizador de descanso al cambiar de app en el móvil o bloquear la pantalla.
+- **Intro Cinemática (`intro.mp4`)**: Integración del componente `src/components/IntroSplash.jsx` en arranque en frío con control de reproducción y salto directo. Detección automática para omitir la intro si se reanuda una sesión activa en segundo plano.
+- **Optimización de Interfaz Móvil**:
+  - Reestructuración de la botonera inferior de sesión en cuadrícula de dos niveles (`1fr 1fr` para Anterior/Siguiente y fila inferior `100%` para Finalizar Sesión) garantizando 0% de desbordamiento horizontal en pantallas estrechas.
+  - Retirada del badge `ONLINE` en `src/components/Layout.jsx` para maximizar la visibilidad del fondo traslúcido y la silueta del gorila.
+  - Pantalla Perfil (`src/components/Profile.jsx`) actualizada con la lista de novedades y numeración v2.1.0.
